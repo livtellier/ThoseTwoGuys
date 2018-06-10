@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <meta name="authors" content="Jonathon Timothy and Olivia Tellier"/>
+    <style>
+        #canvas {
+            width: 800px;
+            height: 600px;
+            border: 1px solid black;
+            position: absolute;
+            left: 0;
+            right: 0;
+            margin: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+
+    <script>
+
+
+
+        var canvas = document.getElementById('canvas');
+        var ctx = canvas.getContext("2d");
+        canvas.width = 800;
+        canvas.height = 600;
+
+        var player = {x:50, y:50};
+        var playImage = new Image();
+        var playSpeed = 5;
+        playImage.src = "images/tempSprite.png";
+
+        var leftPressed = false;
+        var rightPressed = false;
+        var upPressed = false;
+        var downPressed = false;
+        var spacePressed = false;
+
+        window.addEventListener("keydown", onKeyDown, false);
+        window.addEventListener("keyup", onKeyUp, false);
+
+        var missileImg = new Image();
+        missileImg.src = "images/missile.png";
+        missileSpeed = 10;
+        var missileArray = [];
+
+        var bombImg = new Image();
+        bombImg.src = "images/bomb.png";
+        var bombSpeed = 3;
+        var bombs = [];
+        var waitTime = Math.ceil(Math.random() * 200);
+
+        var enemyBombs = function(){
+            this.x = Math.ceil(Math.random() * canvas.width);
+            this.y = 0;
+            this.carpetBomb = [];
+
+            for (var i = 0; i < 3; i++){
+                this.carpetBomb[i] = Math.ceil(Math.random() * canvas.width);
+            }
+            this.carpetBomb.sort(function (a, b) {return b-a});
+
+            this.moveBombs = function(){
+                this.y += bombSpeed;
+                var i = 0;
+                while(this.carpetBomb[i] !== undefined) {
+                    if (this.x < this.carpetBomb[i])
+                        this.carpetBomb.shift();
+                    else
+                        i++;
+                }
+            }
+        };
+        bombs[0] = new enemyBombs();
+        var numBombs = 1;
+
+        function onKeyDown(e){
+            switch(e.keyCode){
+                case 37:
+                    leftPressed = true;
+                    break;
+                case 39:
+                    rightPressed = true;
+                    break;
+                case 38:
+                    upPressed = true;
+                    break;
+                case 40:
+                    downPressed = true;
+                    break;
+                case 32:
+                    spacePressed = true;
+                    break;
+            }
+        }
+        function onKeyUp(e){
+            switch(e.keyCode){
+                case 37:
+                    leftPressed = false;
+                    break;
+                case 39:
+                    rightPressed = false;
+                    break;
+                case 38:
+                    upPressed = false;
+                    break;
+                case 40:
+                    downPressed = false;
+                    break;
+                case 32:
+                    spacePressed = false;
+                    break;
+            }
+        }
+        function fireMissile(){
+            if (spacePressed){
+                var missile = {x: player.x, y: player.y};
+                missileArray.push(missile);
+            }
+            for(var i = 0; missileArray[i] !== undefined; i++){
+                if (missileArray[i].y > 0){
+                    missileArray[i].y -= missileSpeed;
+                }
+                if(missileArray[i].y <= 0){
+                    missileArray.shift();
+                }
+                else{
+                    missileArray.unshift();
+                }
+            }
+        }
+        function animate(){
+            if (numBombs < 3 && waitTime < 1){
+                bombs.push(new enemyBombs());
+                numBombs++;
+                waitTime = Math.ceil(Math.random() * 50);
+            }
+            else
+                waitTime--;
+            if(bombs.length > 0 && bombs[0].y < canvas.height){
+                numBombs--;
+            }
+            for (var i = 0; i < bombs.length; i++) {
+                bombs[i].moveBombs();
+            }
+        }
+
+        function movePlayer(){
+            if (leftPressed && player.x > 0){
+                player.x -= playSpeed;
+            }
+            if(rightPressed && player.x < canvas.width - 78){
+                player.x += playSpeed;
+            }
+            if (upPressed && player.y > 0){
+                player.y -= playSpeed;
+            }
+            if (downPressed && player.y < canvas.height - 78){
+                player.y += playSpeed;
+            }
+        }
+
+        function render(){
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            ctx.drawImage(playImage, player.x, player.y);
+            for (var n = 0; bombs.length > n; n++){
+                ctx.drawImage(bombImg, bombs[n].x, bombs[n].y)
+            }
+            for(var i = 0; i < missileArray.length; i++){
+                ctx.drawImage(missileImg, missileArray[i].x, missileArray[i].y);
+            }
+        }
+        update();
+        function update(){
+            render();
+            movePlayer();
+            fireMissile();
+            animate();
+            requestAnimationFrame(update);
+        }
+    </script>
+</body>
+</html>
